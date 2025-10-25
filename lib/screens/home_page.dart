@@ -1,5 +1,8 @@
+import 'package:cascade/models/timer.dart';
 import 'package:cascade/screens/cascade_page.dart';
 import 'package:flutter/material.dart';
+import '../services/timer_service.dart';
+import '../widgets/timer_dialog.dart';
 import 'timer_page.dart';
 
 class HomePage extends StatefulWidget {
@@ -17,6 +20,7 @@ class _HomePageState extends State<HomePage>
   @override
   void initState() {
     super.initState();
+    loadTimers();
     _pageController = PageController();
     _tabController = TabController(length: 2, vsync: this);
   }
@@ -26,6 +30,24 @@ class _HomePageState extends State<HomePage>
     _pageController.dispose();
     _tabController.dispose();
     super.dispose();
+  }
+
+  List<TimerData> timers = [];
+  bool isLoading = true;
+
+  Future<void> loadTimers() async {
+    final loaded = await TimerService.getAllTimers();
+    setState(() {
+      timers = loaded;
+      isLoading = false;
+    });
+  }
+
+  void _showCreateTimerDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => CreateTimerDialog(onTimerCreated: loadTimers),
+    );
   }
 
   @override
@@ -39,7 +61,10 @@ class _HomePageState extends State<HomePage>
               onPageChanged: (index) {
                 _tabController.animateTo(index);
               },
-              children: const [TimersPage(), CascadesPage()],
+              children: [
+                TimersPage(timers: timers),
+                const CascadesPage(),
+              ],
             ),
           ),
           TabBar(
@@ -65,7 +90,9 @@ class _HomePageState extends State<HomePage>
       floatingActionButton: Padding(
         padding: const EdgeInsets.only(bottom: 24.0),
         child: FloatingActionButton(
-          onPressed: () => {},
+          onPressed: () async {
+            _showCreateTimerDialog();
+          },
           tooltip: 'New Timer',
           backgroundColor: Theme.of(context).colorScheme.primary,
           foregroundColor: Theme.of(context).colorScheme.onPrimary,

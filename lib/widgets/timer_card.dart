@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import '../models/timer.dart';
+import '../services/timer_service.dart';
+import 'timer_dialog.dart';
 
 class TimerCard extends StatelessWidget {
   final TimerData timer;
+  final VoidCallback onTap;
 
-  const TimerCard({super.key, required this.timer});
+  const TimerCard({super.key, required this.timer, required this.onTap});
 
   String formatDuration(Duration duration) {
     String twoDigits(int n) => n.toString().padLeft(2, '0');
@@ -17,6 +20,10 @@ class TimerCard extends StatelessWidget {
     } else {
       return '$minutes:$seconds';
     }
+  }
+
+  Future<void> deleteTimer(String id) async {
+    await TimerService.deleteTimer(id);
   }
 
   @override
@@ -71,12 +78,24 @@ class TimerCard extends StatelessWidget {
                 ),
 
                 IconButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder: (context) => CreateTimerDialog(
+                        onTimerCreated:
+                            onTap, // Reuse the same refresh callback
+                        timerToEdit: timer,
+                      ),
+                    );
+                  },
                   icon: Icon(Icons.edit_outlined, color: timer.color),
                   tooltip: 'Edit',
                 ),
                 IconButton(
-                  onPressed: () {},
+                  onPressed: () async {
+                    await deleteTimer(timer.id);
+                    onTap();
+                  },
                   icon: Icon(Icons.delete_outlined, color: Colors.red[400]),
                 ),
               ],
