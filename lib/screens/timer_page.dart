@@ -1,24 +1,19 @@
 import 'package:flutter/material.dart';
-import '../models/timer.dart';
-import '../services/timer_service.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../stores/timer_store.dart';
 import '../widgets/timer_card.dart';
 
-class TimersPage extends StatefulWidget {
-  final List<TimerData> timers;
-  final VoidCallback onTimersChanged;
-  const TimersPage({
-    super.key,
-    required this.timers,
-    required this.onTimersChanged,
-  });
+class TimersPage extends ConsumerWidget {
+  const TimersPage({super.key});
 
   @override
-  State<TimersPage> createState() => _TimersPageState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final timers = ref.watch(timerProvider);
 
-class _TimersPageState extends State<TimersPage> {
-  @override
-  Widget build(BuildContext context) {
+    void handleReorder(int oldIndex, int newIndex) {
+      ref.read(timerProvider.notifier).reorderTimers(oldIndex, newIndex);
+    }
+
     return Scaffold(
       body: CustomScrollView(
         slivers: [
@@ -40,7 +35,7 @@ class _TimersPageState extends State<TimersPage> {
             ),
           ),
 
-          if (widget.timers.isEmpty)
+          if (timers.isEmpty)
             SliverFillRemaining(
               child: Center(
                 child: Text(
@@ -52,13 +47,10 @@ class _TimersPageState extends State<TimersPage> {
             )
           else
             SliverReorderableList(
-              itemCount: widget.timers.length,
-              onReorder: (oldIndex, newIndex) async {
-                await TimerService.reorderTimers(oldIndex, newIndex);
-                widget.onTimersChanged();
-              },
+              itemCount: timers.length,
+              onReorder: handleReorder,
               itemBuilder: (context, index) {
-                final timer = widget.timers[index];
+                final timer = timers[index];
 
                 return Padding(
                   key: ValueKey(timer.id),
@@ -67,11 +59,7 @@ class _TimersPageState extends State<TimersPage> {
                     right: 20.0,
                     bottom: 12.0,
                   ),
-                  child: TimerCard(
-                    index: index,
-                    timer: timer,
-                    onTimersChanged: widget.onTimersChanged,
-                  ),
+                  child: TimerCard(index: index, timer: timer),
                 );
               },
             ),

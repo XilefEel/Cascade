@@ -1,7 +1,6 @@
 import 'package:cascade/models/timer.dart';
 import 'package:cascade/screens/cascade_page.dart';
 import 'package:flutter/material.dart';
-import '../services/timer_service.dart';
 import '../widgets/timer_dialog.dart';
 import 'timer_page.dart';
 
@@ -20,7 +19,6 @@ class _HomePageState extends State<HomePage>
   @override
   void initState() {
     super.initState();
-    loadTimers();
     _pageController = PageController();
     _tabController = TabController(length: 2, vsync: this);
   }
@@ -35,19 +33,8 @@ class _HomePageState extends State<HomePage>
   List<TimerData> timers = [];
   bool isLoading = true;
 
-  Future<void> loadTimers() async {
-    final loaded = await TimerService.getAllTimers();
-    setState(() {
-      timers = loaded;
-      isLoading = false;
-    });
-  }
-
   void _showCreateTimerDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => TimerDialog(onTimerCreated: loadTimers),
-    );
+    showDialog(context: context, builder: (context) => TimerDialog());
   }
 
   @override
@@ -61,10 +48,7 @@ class _HomePageState extends State<HomePage>
               onPageChanged: (index) {
                 _tabController.animateTo(index);
               },
-              children: [
-                TimersPage(timers: timers, onTimersChanged: loadTimers),
-                const CascadesPage(),
-              ],
+              children: [const TimersPage(), const CascadesPage()],
             ),
           ),
           TabBar(

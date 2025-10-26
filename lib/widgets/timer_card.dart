@@ -1,19 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/timer.dart';
-import '../services/timer_service.dart';
+import '../stores/timer_store.dart';
 import 'timer_dialog.dart';
 
-class TimerCard extends StatelessWidget {
+class TimerCard extends ConsumerWidget {
   final int index;
   final TimerData timer;
-  final VoidCallback onTimersChanged;
 
-  const TimerCard({
-    super.key,
-    required this.index,
-    required this.timer,
-    required this.onTimersChanged,
-  });
+  const TimerCard({super.key, required this.index, required this.timer});
 
   String formatDuration(Duration duration) {
     String twoDigits(int n) => n.toString().padLeft(2, '0');
@@ -28,12 +23,12 @@ class TimerCard extends StatelessWidget {
     }
   }
 
-  Future<void> deleteTimer(String id) async {
-    await TimerService.deleteTimer(id);
-  }
-
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    void handleDelete() {
+      ref.read(timerProvider.notifier).deleteTimer(timer.id);
+    }
+
     return Material(
       color: Colors.white,
       borderRadius: BorderRadius.circular(12.0),
@@ -90,26 +85,20 @@ class TimerCard extends StatelessWidget {
                     ],
                   ),
                 ),
-
                 IconButton(
                   onPressed: () {
                     showDialog(
                       context: context,
-                      builder: (context) => TimerDialog(
-                        onTimerCreated: onTimersChanged,
-                        timerToEdit: timer,
-                      ),
+                      builder: (context) => TimerDialog(timerToEdit: timer),
                     );
                   },
                   icon: Icon(Icons.edit_outlined, color: timer.color),
                   tooltip: 'Edit',
                 ),
                 IconButton(
-                  onPressed: () async {
-                    await deleteTimer(timer.id);
-                    onTimersChanged();
-                  },
+                  onPressed: handleDelete,
                   icon: Icon(Icons.delete_outlined, color: Colors.red[400]),
+                  tooltip: 'Delete',
                 ),
               ],
             ),

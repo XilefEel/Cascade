@@ -1,21 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/timer.dart';
-import '../services/timer_service.dart';
+import '../stores/timer_store.dart';
 
-class TimerDialog extends StatefulWidget {
-  final VoidCallback onTimerCreated;
+class TimerDialog extends ConsumerStatefulWidget {
   final TimerData? timerToEdit;
-  const TimerDialog({
-    super.key,
-    required this.onTimerCreated,
-    this.timerToEdit,
-  });
+
+  const TimerDialog({super.key, this.timerToEdit});
 
   @override
-  State<TimerDialog> createState() => _TimerDialogState();
+  ConsumerState<TimerDialog> createState() => _TimerDialogState();
 }
 
-class _TimerDialogState extends State<TimerDialog> {
+class _TimerDialogState extends ConsumerState<TimerDialog> {
   late final TextEditingController nameController;
   late final TextEditingController hoursController;
   late final TextEditingController minutesController;
@@ -37,7 +34,6 @@ class _TimerDialogState extends State<TimerDialog> {
       secondsController = TextEditingController(text: seconds.toString());
       selectedColor = timer.color;
     } else {
-      // Create mode - use defaults
       nameController = TextEditingController(text: 'New Timer');
       hoursController = TextEditingController(text: '0');
       minutesController = TextEditingController(text: '5');
@@ -80,32 +76,36 @@ class _TimerDialogState extends State<TimerDialog> {
 
     try {
       if (isEditMode) {
-        await TimerService.updateTimer(
-          TimerData(
-            id: widget.timerToEdit!.id,
-            name: name,
-            duration: Duration(seconds: totalSeconds),
-            color: selectedColor,
-            orderIndex: widget.timerToEdit!.orderIndex,
-          ),
-        );
+        await ref
+            .read(timerProvider.notifier)
+            .updateTimer(
+              TimerData(
+                id: widget.timerToEdit!.id,
+                name: name,
+                duration: Duration(seconds: totalSeconds),
+                color: selectedColor,
+                orderIndex: widget.timerToEdit!.orderIndex,
+              ),
+            );
       } else {
-        await TimerService.addTimer(
-          TimerData.create(
-            name: name,
-            duration: Duration(seconds: totalSeconds),
-            color: selectedColor,
-            orderIndex: 0,
-          ),
-        );
+        await ref
+            .read(timerProvider.notifier)
+            .addTimer(
+              TimerData.create(
+                name: name,
+                duration: Duration(seconds: totalSeconds),
+                color: selectedColor,
+                orderIndex: 0,
+              ),
+            );
       }
+
       if (!mounted) return;
       Navigator.pop(context);
-      widget.onTimerCreated();
     } catch (e) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('Failed to create timer')));
+      ).showSnackBar(const SnackBar(content: Text('Failed to save timer')));
     }
   }
 
