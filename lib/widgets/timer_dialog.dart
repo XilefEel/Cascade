@@ -2,39 +2,116 @@ import 'package:flutter/material.dart';
 import '../models/timer.dart';
 import '../services/timer_service.dart';
 
-class CreateTimerDialog extends StatefulWidget {
+class TimerDialog extends StatefulWidget {
   final VoidCallback onTimerCreated;
   final TimerData? timerToEdit;
-  const CreateTimerDialog({
+  const TimerDialog({
     super.key,
     required this.onTimerCreated,
     this.timerToEdit,
   });
 
   @override
-  State<CreateTimerDialog> createState() => _CreateTimerDialogState();
+  State<TimerDialog> createState() => _TimerDialogState();
 }
 
-class _CreateTimerDialogState extends State<CreateTimerDialog> {
-  final nameController = TextEditingController(text: 'New Timer');
+class _TimerDialogState extends State<TimerDialog> {
+  late final TextEditingController nameController;
+  late final TextEditingController hoursController;
+  late final TextEditingController minutesController;
+  late final TextEditingController secondsController;
+  late Color selectedColor;
 
-  final hoursController = TextEditingController(text: '0');
-  final minutesController = TextEditingController(text: '5');
-  final secondsController = TextEditingController(text: '0');
+  @override
+  void initState() {
+    super.initState();
+    if (widget.timerToEdit != null) {
+      final timer = widget.timerToEdit!;
+      final hours = timer.duration.inHours;
+      final minutes = timer.duration.inMinutes.remainder(60);
+      final seconds = timer.duration.inSeconds.remainder(60);
 
-  Color selectedColor = Colors.blue;
+      nameController = TextEditingController(text: timer.name);
+      hoursController = TextEditingController(text: hours.toString());
+      minutesController = TextEditingController(text: minutes.toString());
+      secondsController = TextEditingController(text: seconds.toString());
+      selectedColor = timer.color;
+    } else {
+      // Create mode - use defaults
+      nameController = TextEditingController(text: 'New Timer');
+      hoursController = TextEditingController(text: '0');
+      minutesController = TextEditingController(text: '5');
+      secondsController = TextEditingController(text: '0');
+      selectedColor = Colors.blue;
+    }
+  }
 
   @override
   void dispose() {
     nameController.dispose();
+    hoursController.dispose();
     minutesController.dispose();
+    secondsController.dispose();
     super.dispose();
+  }
+
+  bool get isEditMode => widget.timerToEdit != null;
+
+  void handleSubmit() async {
+    final name = nameController.text.trim();
+    final hours = int.tryParse(hoursController.text.trim()) ?? 0;
+    final minutes = int.tryParse(minutesController.text.trim()) ?? 0;
+    final seconds = int.tryParse(secondsController.text.trim()) ?? 0;
+
+    if (name.isEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Please enter a name')));
+      return;
+    }
+
+    final totalSeconds = hours * 3600 + minutes * 60 + seconds;
+    if (totalSeconds <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Duration must be greater than 0')),
+      );
+      return;
+    }
+
+    try {
+      if (isEditMode) {
+        await TimerService.updateTimer(
+          TimerData(
+            id: widget.timerToEdit!.id,
+            name: name,
+            duration: Duration(seconds: totalSeconds),
+            color: selectedColor,
+            orderIndex: widget.timerToEdit!.orderIndex,
+          ),
+        );
+      } else {
+        await TimerService.addTimer(
+          TimerData.create(
+            name: name,
+            duration: Duration(seconds: totalSeconds),
+            color: selectedColor,
+          ),
+        );
+      }
+      if (!mounted) return;
+      Navigator.pop(context);
+      widget.onTimerCreated();
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Failed to create timer')));
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Create New Timer'),
+      title: Text(isEditMode ? 'Edit Timer' : 'Create New Timer'),
       content: SingleChildScrollView(
         child: Column(
           children: [
@@ -99,29 +176,8 @@ class _CreateTimerDialogState extends State<CreateTimerDialog> {
           child: const Text('Cancel'),
         ),
         ElevatedButton(
-          onPressed: () async {
-            final name = nameController.text.trim();
-            final hours = int.tryParse(hoursController.text.trim()) ?? 0;
-            final minutes = int.tryParse(minutesController.text.trim()) ?? 0;
-            final seconds = int.tryParse(secondsController.text.trim()) ?? 0;
-
-            if (name.isNotEmpty && minutes > 0) {
-              final newTimer = TimerData.create(
-                name: name,
-                duration: Duration(
-                  hours: hours,
-                  minutes: minutes,
-                  seconds: seconds,
-                ),
-                color: selectedColor,
-              );
-
-              await TimerService.addTimer(newTimer);
-              widget.onTimerCreated();
-              Navigator.of(context).pop();
-            }
-          },
-          child: const Text('Create'),
+          onPressed: handleSubmit,
+          child: Text(isEditMode ? 'Save' : 'Create'),
         ),
       ],
     );

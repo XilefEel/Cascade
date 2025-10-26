@@ -4,7 +4,12 @@ import '../widgets/timer_card.dart';
 
 class TimersPage extends StatefulWidget {
   final List<TimerData> timers;
-  const TimersPage({super.key, required this.timers});
+  final VoidCallback onTimersChanged;
+  const TimersPage({
+    super.key,
+    required this.timers,
+    required this.onTimersChanged,
+  });
 
   @override
   State<TimersPage> createState() => _TimersPageState();
@@ -45,12 +50,9 @@ class _TimersPageState extends State<TimersPage> {
             (timer) => Padding(
               padding: const EdgeInsets.only(bottom: 12.0),
               child: TimerCard(
+                key: ValueKey(timer.id),
                 timer: timer,
-                onTap: () {
-                  setState(() {
-                    widget.timers.removeWhere((t) => t.id == timer.id);
-                  });
-                },
+                onTimersChanged: widget.onTimersChanged,
               ),
             ),
           ),

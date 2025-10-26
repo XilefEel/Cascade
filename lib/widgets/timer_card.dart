@@ -5,9 +5,13 @@ import 'timer_dialog.dart';
 
 class TimerCard extends StatelessWidget {
   final TimerData timer;
-  final VoidCallback onTap;
+  final VoidCallback onTimersChanged;
 
-  const TimerCard({super.key, required this.timer, required this.onTap});
+  const TimerCard({
+    super.key,
+    required this.timer,
+    required this.onTimersChanged,
+  });
 
   String formatDuration(Duration duration) {
     String twoDigits(int n) => n.toString().padLeft(2, '0');
@@ -81,9 +85,8 @@ class TimerCard extends StatelessWidget {
                   onPressed: () {
                     showDialog(
                       context: context,
-                      builder: (context) => CreateTimerDialog(
-                        onTimerCreated:
-                            onTap, // Reuse the same refresh callback
+                      builder: (context) => TimerDialog(
+                        onTimerCreated: onTimersChanged,
                         timerToEdit: timer,
                       ),
                     );
@@ -94,7 +97,7 @@ class TimerCard extends StatelessWidget {
                 IconButton(
                   onPressed: () async {
                     await deleteTimer(timer.id);
-                    onTap();
+                    onTimersChanged();
                   },
                   icon: Icon(Icons.delete_outlined, color: Colors.red[400]),
                 ),

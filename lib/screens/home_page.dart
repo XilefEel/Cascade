@@ -46,7 +46,7 @@ class _HomePageState extends State<HomePage>
   void _showCreateTimerDialog() {
     showDialog(
       context: context,
-      builder: (context) => CreateTimerDialog(onTimerCreated: loadTimers),
+      builder: (context) => TimerDialog(onTimerCreated: loadTimers),
     );
   }
 
@@ -62,7 +62,7 @@ class _HomePageState extends State<HomePage>
                 _tabController.animateTo(index);
               },
               children: [
-                TimersPage(timers: timers),
+                TimersPage(timers: timers, onTimersChanged: loadTimers),
                 const CascadesPage(),
               ],
             ),

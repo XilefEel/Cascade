@@ -43,6 +43,13 @@ class TimerService {
     await saveTimers(timers);
   }
 
+  static Future<void> updateTimer(TimerData timer) async {
+    final timers = await getAllTimers();
+    final index = timers.indexWhere((t) => t.id == timer.id);
+    timers[index] = timer;
+    await saveTimers(timers);
+  }
+
   static Future<void> clearAll() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_key);
