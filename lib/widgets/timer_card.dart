@@ -4,11 +4,13 @@ import '../services/timer_service.dart';
 import 'timer_dialog.dart';
 
 class TimerCard extends StatelessWidget {
+  final int index;
   final TimerData timer;
   final VoidCallback onTimersChanged;
 
   const TimerCard({
     super.key,
+    required this.index,
     required this.timer,
     required this.onTimersChanged,
   });
@@ -50,6 +52,13 @@ class TimerCard extends StatelessWidget {
                 Expanded(
                   child: Row(
                     children: [
+                      ReorderableDragStartListener(
+                        index: index,
+                        child: Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: Icon(Icons.drag_indicator, color: Colors.grey),
+                        ),
+                      ),
                       Container(
                         width: 8,
                         height: 60,
@@ -65,12 +74,13 @@ class TimerCard extends StatelessWidget {
                           children: [
                             Text(
                               timer.name,
-                              style: const TextStyle(fontSize: 17),
+                              style: const TextStyle(fontSize: 15),
                             ),
                             Text(
                               formatDuration(timer.duration),
                               style: TextStyle(
-                                fontSize: 14,
+                                fontSize: 25,
+                                fontWeight: FontWeight.bold,
                                 color: timer.color,
                               ),
                             ),

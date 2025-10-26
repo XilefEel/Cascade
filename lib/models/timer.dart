@@ -36,11 +36,12 @@ class TimerData {
     required String name,
     required Duration duration,
     required Color color,
+    required int orderIndex,
   }) => TimerData(
     id: const Uuid().v4(),
     name: name,
     duration: duration,
     color: color,
-    orderIndex: 0,
+    orderIndex: orderIndex,
   );
 }

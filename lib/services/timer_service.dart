@@ -50,6 +50,19 @@ class TimerService {
     await saveTimers(timers);
   }
 
+  static Future<void> reorderTimers(int oldIndex, int newIndex) async {
+    final timers = await getAllTimers();
+
+    if (oldIndex < newIndex) newIndex -= 1;
+    final timer = timers.removeAt(oldIndex);
+    timers.insert(newIndex, timer);
+
+    for (int i = 0; i < timers.length; i++) {
+      timers[i].orderIndex = i;
+    }
+    await saveTimers(timers);
+  }
+
   static Future<void> clearAll() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_key);

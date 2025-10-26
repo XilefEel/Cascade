@@ -95,6 +95,7 @@ class _TimerDialogState extends State<TimerDialog> {
             name: name,
             duration: Duration(seconds: totalSeconds),
             color: selectedColor,
+            orderIndex: 0,
           ),
         );
       }
